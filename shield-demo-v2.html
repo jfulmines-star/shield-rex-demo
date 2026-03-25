@@ -1088,29 +1088,30 @@ const LOG_DATA = [
   { ts: '17:46', msg: 'awaiting approval...',                               hi: false },
 ];
 
-// Log entry times (ms offset from when screen 2 appears at t=10s)
+// Log entry times (ms offset from when screen 2 appears at t=7s)
+// 56s total: S2=7-14s S3=14-22s S4=22-29s S5=29-37s S6=37-44s S7=44-56s
 const LOG_TIMES = [
      0,   // 0  intel scanning
-   900,   // 1  34 contracts parsed
-  1900,   // 2  match: Lockheed
-  2700,   // 3  match: Southwest
-  3600,   // 4  contact.search
-  4400,   // 5  confidence: 94%
-  5200,   // 6  draft.ready
-  6000,   // 7  awaiting approval
- 12500,   // 8  approved sent (screen 3 is at +12s)
- 13400,   // 9  hubspot.log
- 14200,   // 10 deal.update
- 25200,   // 11 competitive scan (screen 4 at +25s)
- 26100,   // 12 Northrop
- 26900,   // 13 territory.flag
- 27700,   // 14 draft.queued
- 36200,   // 15 meeting.prep (screen 5 at +36s)
- 37000,   // 16 pulling
- 38200,   // 17 brief.ready
- 50200,   // 18 week.summary (screen 6 at +50s)
- 51100,   // 19 pipeline.report
- 52000,   // 20 awaiting approval
+   700,   // 1  34 contracts parsed
+  1400,   // 2  match: Lockheed
+  2000,   // 3  match: Southwest
+  2700,   // 4  contact.search
+  3300,   // 5  confidence: 94%
+  4000,   // 6  draft.ready
+  4700,   // 7  awaiting approval
+  7500,   // 8  approved sent  (screen 3 at +7s)
+  8200,   // 9  hubspot.log
+  8900,   // 10 deal.update
+ 15500,   // 11 competitive scan (screen 4 at +15s)
+ 16200,   // 12 Northrop
+ 16900,   // 13 territory.flag
+ 17600,   // 14 draft.queued
+ 22500,   // 15 meeting.prep   (screen 5 at +22s)
+ 23200,   // 16 pulling
+ 24000,   // 17 brief.ready
+ 30500,   // 18 week.summary   (screen 6 at +30s)
+ 31300,   // 19 pipeline.report
+ 32100,   // 20 awaiting approval
 ];
 
 // ══════════════════════════════════════════
@@ -1244,59 +1245,59 @@ function run() {
   document.getElementById('s1-cursor').style.display = 'inline-block';
   typewriter(tw, '"Every morning. Same problem."');
 
-  at(() => addClass('prob1', 'show'), 3000);
-  at(() => addClass('prob2', 'show'), 4400);
-  at(() => addClass('prob3', 'show'), 5700);
+  at(() => addClass('prob1', 'show'), 2000);
+  at(() => addClass('prob2', 'show'), 3200);
+  at(() => addClass('prob3', 'show'), 4400);
 
-  // Full 90s timeline — matches stretched voiceover
-  // S1=0-10s  S2=10-22s  S3=22-35s  S4=35-46s  S5=46-60s  S6=60-72s  S7=72-90s
+  // 56s timeline — matches original Bella voiceover
+  // S1=0-7s  S2=7-14s  S3=14-22s  S4=22-29s  S5=29-37s  S6=37-44s  S7=44-56s
 
-  // --- Transition → Screen 2 (10s) ---
+  // --- Transition → Screen 2 (7s) ---
   at(() => {
     document.getElementById('screen1').classList.add('fade-out');
     document.getElementById('split-layout').classList.add('visible');
     activateScreen(2);
     at(() => addClass('card1', 'show'), 400);
-    at(() => addClass('card2', 'show'), 750);
-    at(() => addClass('card3', 'show'), 1100);
+    at(() => addClass('card2', 'show'), 700);
+    at(() => addClass('card3', 'show'), 1000);
     scheduleLogEntries(0);
-  }, 10000);
+  }, 7000);
 
-  // --- Screen 3 (22s) ---
+  // --- Screen 3 (14s) ---
   at(() => {
     activateScreen(3);
     at(() => addClass('email-draft', 'show'), 350);
-    // Approve click at ~30s (8s into screen 3)
+    // Approve click 4s in
     at(() => {
       const btn = document.getElementById('approve-btn');
       btn.classList.remove('pulse');
       btn.classList.add('done');
       btn.textContent = 'APPROVED ✓';
       at(() => addClass('conf1', 'show'), 350);
-      at(() => addClass('conf2', 'show'), 750);
-      at(() => addClass('conf3', 'show'), 1150);
-    }, 8000);
-  }, 22000);
+      at(() => addClass('conf2', 'show'), 700);
+      at(() => addClass('conf3', 'show'), 1050);
+    }, 4000);
+  }, 14000);
 
-  // --- Screen 4 (35s) ---
+  // --- Screen 4 (22s) ---
   at(() => {
     activateScreen(4);
     at(() => addClass('alert-card', 'show'), 350);
-  }, 35000);
+  }, 22000);
 
-  // --- Screen 5 (46s) ---
+  // --- Screen 5 (29s) ---
   at(() => {
     activateScreen(5);
     at(() => addClass('meeting-card', 'show'), 350);
-  }, 46000);
+  }, 29000);
 
-  // --- Screen 6 (60s) ---
+  // --- Screen 6 (37s) ---
   at(() => {
     activateScreen(6);
     at(() => addClass('summary-card', 'show'), 350);
-  }, 60000);
+  }, 37000);
 
-  // --- Screen 7 (72s) ---
+  // --- Screen 7 (44s) ---
   at(() => {
     const split = document.getElementById('split-layout');
     split.style.transition = 'opacity 1.2s ease';
@@ -1310,9 +1311,9 @@ function run() {
     at(() => addClass('closer-tagline', 'show'), 900);
     at(() => addClass('closer-footer',  'show'), 1300);
 
-    // Replay button at 88s
-    at(() => addClass('btn-replay', 'show'), 16000);
-  }, 72000);
+    // Replay button at 57s
+    at(() => addClass('btn-replay', 'show'), 13000);
+  }, 44000);
 }
 
 // ══════════════════════════════════════════
@@ -1378,7 +1379,7 @@ function replay() {
 }
 
 // ── Audio ──
-const demoAudio = new Audio('demo-audio-v4-90s.mp3');
+const demoAudio = new Audio('demo-audio-v3-inspired.mp3');
 demoAudio.volume = 1.0;
 demoAudio.preload = 'auto';
 
