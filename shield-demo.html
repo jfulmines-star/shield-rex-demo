@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REX — Shield Technologies Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0f1e;
+    --blue: #2563eb;
+    --green: #22c55e;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --card-bg: #111827;
+    --border: #1e293b;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    width: 1280px;
+    height: 720px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .screen.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ══════════════════════════════
+     SCREEN 1 — THE PROBLEM
+  ══════════════════════════════ */
+  #s1 {
+    background: #000;
+    padding: 80px;
+  }
+  #s1-headline {
+    font-size: 42px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+    margin-bottom: 48px;
+    min-height: 54px;
+  }
+  #s1-cursor {
+    display: inline-block;
+    width: 3px;
+    height: 42px;
+    background: #fff;
+    vertical-align: middle;
+    margin-left: 4px;
+    animation: blink 0.8s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .intel-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 680px;
+  }
+  .intel-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    opacity: 0;
+    transform: translateX(-16px);
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .intel-item.show {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .intel-bullet {
+    width: 6px;
+    height: 6px;
+    background: var(--blue);
+    border-radius: 50%;
+    margin-top: 9px;
+    flex-shrink: 0;
+  }
+  .intel-text {
+    font-size: 20px;
+    font-weight: 400;
+    color: #cbd5e1;
+    line-height: 1.5;
+  }
+
+  /* ══════════════════════════════
+     SCREEN 2 — REX OPENS
+  ══════════════════════════════ */
+  #s2 {
+    padding: 0;
+    justify-content: flex-start;
+    align-items: stretch;
+    background: var(--bg);
+  }
+  .rex-header {
+    background: #0d1526;
+    border-bottom: 1px solid var(--border);
+    padding: 18px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .rex-logo {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--blue);
+  }
+  .rex-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+  }
+  .rex-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .rex-badge {
+    margin-left: auto;
+    background: rgba(37, 99, 235, 0.15);
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .rex-body {
+    flex: 1;
+    padding: 36px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .intel-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .intel-card.show {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .card-accent {
+    width: 3px;
+    border-radius: 2px;
+    align-self: stretch;
+    flex-shrink: 0;
+    min-height: 40px;
+  }
+  .card-accent.blue { background: var(--blue); }
+  .card-accent.green { background: var(--green); }
+
+  .card-body { flex: 1; }
+  .card-type {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .card-meta {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .card-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+  .badge-blue {
+    background: rgba(37, 99, 235, 0.15);
+    color: var(--blue);
+    border: 1px solid rgba(37, 99, 235, 0.25);
+  }
+  .badge-green {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--green);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+  }
+
+  /* ══════════════════════════════
+     SCREEN 3 — DRAFT EMAIL
+  ══════════════════════════════ */
+  #s3 {
+    padding: 40px;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg);
+  }
+  .email-panel {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 780px;
+    overflow: hidden;
+    transform: translateY(60px);
+    opacity: 0;
+    transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .email-panel.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  .email-panel-header {
+    background: #0d1526;
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-red { background: #ef4444; }
+  .dot-yellow { background: #f59e0b; }
+  .dot-green { background: var(--green); }
+  .email-panel-title {
+    margin-left: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .rex-tag {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--blue);
+    letter-spacing: 0.1em;
+  }
+
+  .email-fields {
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .email-field {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #1e293b;
+    font-size: 13px;
+  }
+  .email-field:last-child { border-bottom: none; }
+  .field-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+    width: 52px;
+    flex-shrink: 0;
+  }
+  .field-value { color: var(--text); font-size: 13px; }
+  .field-value .addr { color: #93c5fd; }
+  .field-value .subject-text { font-weight: 500; }
+
+  .email-body {
+    padding: 20px 24px 8px;
+    font-size: 14px;
+    line-height: 1.75;
+    color: #cbd5e1;
+  }
+  .email-body p { margin-bottom: 10px; }
+
+  .email-actions {
+    padding: 16px 24px 20px;
+    display: flex;
+    gap: 12px;
+  }
+  .btn-approve {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    padding: 10px 28px;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .btn-approve:hover { background: #1d4ed8; }
+  .btn-hold {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 10px 28px;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-hold:hover { border-color: var(--muted); color: var(--text); }
+
+  /* ══════════════════════════════
+     SCREEN 4 — ONE CLICK
+  ══════════════════════════════ */
+  #s4 {
+    padding: 40px;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg);
+  }
+  .confirm-panel {
+    width: 620px;
+  }
+  .confirm-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 36px;
+  }
+  .approve-glow {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.6);
+    animation: none;
+  }
+  .approve-glow.pulse {
+    animation: glowPulse 0.8s cubic-bezier(0.4, 0, 0.6, 1) 2;
+  }
+  @keyframes glowPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+    50%  { box-shadow: 0 0 0 18px rgba(37, 99, 235, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+  }
+
+  .confirm-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .confirm-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    opacity: 0;
+    transform: translateX(-12px);
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+  }
+  .confirm-row.show {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .check-icon {
+    width: 28px;
+    height: 28px;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+  .confirm-text { font-size: 14px; color: var(--text); }
+  .confirm-text strong { font-weight: 600; }
+  .confirm-text .addr { color: #93c5fd; }
+
+  /* ══════════════════════════════
+     SCREEN 5 — FOLLOW-UP
+  ══════════════════════════════ */
+  #s5 {
+    padding: 40px;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg);
+  }
+  .day-tag {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .day-tag.show { opacity: 1; }
+
+  .followup-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 640px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(50px);
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .followup-card.show {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .followup-top {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .notif-icon {
+    font-size: 20px;
+    margin-top: 2px;
+  }
+  .notif-body { flex: 1; }
+  .notif-contact {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .notif-detail {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .notif-time {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .followup-actions {
+    padding: 16px 24px;
+    display: flex;
+    gap: 12px;
+  }
+
+  /* ══════════════════════════════
+     SCREEN 6 — CLOSER
+  ══════════════════════════════ */
+  #s6 {
+    background: var(--bg);
+    text-align: center;
+    gap: 0;
+  }
+  .closer-logo {
+    font-size: 72px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: #fff;
+    margin-bottom: 20px;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .closer-logo.show { opacity: 1; transform: translateY(0); }
+
+  .closer-tagline {
+    font-size: 22px;
+    font-weight: 300;
+    color: #94a3b8;
+    letter-spacing: 0.02em;
+    margin-bottom: 48px;
+    opacity: 0;
+    transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
+  }
+  .closer-tagline.show { opacity: 1; }
+
+  .closer-footer {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.5s ease 0.6s;
+  }
+  .closer-footer.show { opacity: 1; }
+
+  .replay-btn {
+    margin-top: 48px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 10px 28px;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.4s ease 1s, border-color 0.2s, color 0.2s;
+  }
+  .replay-btn.show { opacity: 1; }
+  .replay-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+  /* ══════════════════════════════
+     PROGRESS BAR
+  ══════════════════════════════ */
+  .progress-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: var(--blue);
+    transition: width 0.1s linear;
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+
+<!-- SCREEN 1 — THE PROBLEM -->
+<div class="screen" id="s1">
+  <div id="s1-headline"><span id="s1-text"></span><span id="s1-cursor"></span></div>
+  <div class="intel-list">
+    <div class="intel-item" id="i1">
+      <div class="intel-bullet"></div>
+      <div class="intel-text">34 defense contracts awarded overnight</div>
+    </div>
+    <div class="intel-item" id="i2">
+      <div class="intel-bullet"></div>
+      <div class="intel-text">2 new procurement officers at Lockheed Martin</div>
+    </div>
+    <div class="intel-item" id="i3">
+      <div class="intel-bullet"></div>
+      <div class="intel-text">Leadership change: Southwest Airlines MRO Division</div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 2 — REX OPENS -->
+<div class="screen" id="s2">
+  <div class="rex-header">
+    <span class="rex-logo">REX</span>
+    <div class="rex-divider"></div>
+    <span class="rex-title">Daily Brief — March 25, 2026</span>
+    <div class="rex-badge">3 New Signals</div>
+  </div>
+  <div class="rex-body">
+    <div class="section-label">Intelligence Feed</div>
+    <div class="intel-card" id="c1">
+      <div class="card-accent blue"></div>
+      <div class="card-body">
+        <div class="card-type">🛡️ DoD Contract Award</div>
+        <div class="card-title">Lockheed F-35 Block 4 Upgrade — $340M</div>
+        <div class="card-meta">Prime contractor · Defense Logistics Agency · Awarded Mar 24</div>
+      </div>
+      <div class="card-badge badge-blue">MATCH: Envelop Covers</div>
+    </div>
+    <div class="intel-card" id="c2">
+      <div class="card-accent blue"></div>
+      <div class="card-body">
+        <div class="card-type">🔄 Leadership Change</div>
+        <div class="card-title">Southwest Airlines MRO Division</div>
+        <div class="card-meta">Karen Hill promoted → Director of Procurement · Effective Mar 18</div>
+      </div>
+      <div class="card-badge badge-blue">MONITOR</div>
+    </div>
+    <div class="intel-card" id="c3">
+      <div class="card-accent green"></div>
+      <div class="card-body">
+        <div class="card-type">✦ New Contact Identified</div>
+        <div class="card-title">Karen Hill — Southwest Airlines</div>
+        <div class="card-meta">Director of Procurement · MRO Fleet Division · Dallas, TX</div>
+      </div>
+      <div class="card-badge badge-green">PRIORITY: HIGH</div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 3 — DRAFT EMAIL -->
+<div class="screen" id="s3">
+  <div class="email-panel" id="email-panel">
+    <div class="email-panel-header">
+      <div class="dot dot-red"></div>
+      <div class="dot dot-yellow"></div>
+      <div class="dot dot-green"></div>
+      <span class="email-panel-title">New Message</span>
+      <span class="rex-tag">REX DRAFT</span>
+    </div>
+    <div class="email-fields">
+      <div class="email-field">
+        <span class="field-label">From</span>
+        <span class="field-value"><span class="addr">andy@shieldtechnologies.com</span></span>
+      </div>
+      <div class="email-field">
+        <span class="field-label">To</span>
+        <span class="field-value"><span class="addr">karen.hill@southwest.com</span></span>
+      </div>
+      <div class="email-field">
+        <span class="field-label">Subject</span>
+        <span class="field-value"><span class="subject-text">Envelop Cover Solutions — Southwest MRO Fleet</span></span>
+      </div>
+    </div>
+    <div class="email-body">
+      <p>Hi Karen — congratulations on the Director of Procurement role. I wanted to reach out because Shield Technologies supplies envelop covers for Boeing 737 and 737 MAX fleets across several major carriers, and with Southwest's scale, I think the fit is worth a conversation.</p>
+      <p>We're also active in the F-35 supply chain through the Lockheed Block 4 program — which may be relevant as Southwest expands its MRO vendor relationships into defense-adjacent suppliers.</p>
+      <p>Would a 20-minute call next week work to walk through what we offer? Happy to tailor the scope to your current priorities.</p>
+    </div>
+    <div class="email-actions">
+      <button class="btn-approve">Approve</button>
+      <button class="btn-hold">Hold</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 4 — ONE CLICK -->
+<div class="screen" id="s4">
+  <div class="confirm-panel">
+    <div class="confirm-header">
+      <button class="approve-glow" id="approve-glow-btn">Approve</button>
+    </div>
+    <div class="confirm-rows">
+      <div class="confirm-row" id="cr1">
+        <div class="check-icon">✓</div>
+        <div class="confirm-text">Email sent → <span class="addr">karen.hill@southwest.com</span></div>
+      </div>
+      <div class="confirm-row" id="cr2">
+        <div class="check-icon">✓</div>
+        <div class="confirm-text"><strong>HubSpot:</strong> Contact logged — Karen Hill, Southwest Airlines</div>
+      </div>
+      <div class="confirm-row" id="cr3">
+        <div class="check-icon">✓</div>
+        <div class="confirm-text">Deal stage: <strong>Prospect</strong> → <strong style="color:var(--green)">First Contact</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 5 — FOLLOW-UP -->
+<div class="screen" id="s5">
+  <div class="day-tag" id="day-tag">Day 5</div>
+  <div class="followup-card" id="followup-card">
+    <div class="followup-top">
+      <div class="notif-icon">⚡</div>
+      <div class="notif-body">
+        <div class="notif-contact">Karen Hill — No reply detected</div>
+        <div class="notif-detail">Follow-up draft ready · Southwest Airlines MRO · Original sent Mar 25</div>
+      </div>
+      <div class="notif-time">Day 5</div>
+    </div>
+    <div class="followup-actions">
+      <button class="btn-approve">Approve</button>
+      <button class="btn-hold">Hold</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 6 — CLOSER -->
+<div class="screen" id="s6">
+  <div class="closer-logo" id="closer-logo">REX</div>
+  <div class="closer-tagline" id="closer-tagline">"Built for the ones who don't miss."</div>
+  <div class="closer-footer" id="closer-footer">Powered by AxiomStream Group</div>
+  <button class="replay-btn" id="replay-btn" onclick="replay()">↺ Replay</button>
+</div>
+
+<div class="progress-bar" id="progress-bar"></div>
+
+<script>
+(function() {
+
+  // ── timeline entries: [startMs, endMs, fn]
+  const timeline = [];
+  let startTime = null;
+  let rafId = null;
+  let totalDuration = 27000;
+
+  function at(ms, fn) { timeline.push([ms, fn]); }
+  function fired(idx) { timeline[idx][2] = null; } // mark fired
+
+  // ── helpers
+  function show(id)    { document.getElementById(id).classList.add('show'); }
+  function screen(id)  { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+  // ── typewriter
+  function typeWriter(targetId, text, duration, cb) {
+    const el = document.getElementById(targetId);
+    el.textContent = '';
+    const chars = text.split('');
+    const delay = duration / chars.length;
+    let i = 0;
+    function next() {
+      if (i < chars.length) {
+        el.textContent += chars[i++];
+        setTimeout(next, delay);
+      } else if (cb) cb();
+    }
+    next();
+  }
+
+  // ── SCHEDULE ──
+
+  // Screen 1: 0–4s
+  at(0, () => {
+    screen('s1');
+    typeWriter('s1-text', 'Every morning. Same problem.', 1600);
+  });
+  at(1900, () => show('i1'));
+  at(2500, () => show('i2'));
+  at(3100, () => show('i3'));
+
+  // Screen 2: 4–9s
+  at(4000, () => {
+    screen('s2');
+    document.getElementById('s1-cursor').style.display = 'none';
+  });
+  at(4200, () => show('c1'));
+  at(4550, () => show('c2'));
+  at(4900, () => show('c3'));
+
+  // Screen 3: 9–15s
+  at(9000, () => {
+    screen('s3');
+    setTimeout(() => document.getElementById('email-panel').classList.add('show'), 80);
+  });
+
+  // Screen 4: 15–19s
+  at(15000, () => {
+    screen('s4');
+    setTimeout(() => {
+      document.getElementById('approve-glow-btn').classList.add('pulse');
+      setTimeout(() => show('cr1'), 900);
+      setTimeout(() => show('cr2'), 1400);
+      setTimeout(() => show('cr3'), 1900);
+    }, 200);
+  });
+
+  // Screen 5: 19–23s
+  at(19000, () => {
+    screen('s5');
+    setTimeout(() => { show('day-tag'); show('followup-card'); }, 100);
+  });
+
+  // Screen 6: 23–27s
+  at(23000, () => {
+    screen('s6');
+    setTimeout(() => show('closer-logo'), 150);
+    setTimeout(() => show('closer-tagline'), 450);
+    setTimeout(() => show('closer-footer'), 750);
+    setTimeout(() => show('replay-btn'), 1200);
+  });
+
+  // ── animation loop
+  function tick(ts) {
+    if (!startTime) startTime = ts;
+    const elapsed = ts - startTime;
+
+    // fire timeline events
+    for (let i = 0; i < timeline.length; i++) {
+      if (timeline[i][2] && elapsed >= timeline[i][0]) {
+        timeline[i][2]();
+        timeline[i][2] = null;
+      }
+    }
+
+    // progress bar
+    const pct = Math.min(100, (elapsed / totalDuration) * 100);
+    document.getElementById('progress-bar').style.width = pct + '%';
+
+    if (elapsed < totalDuration + 2000) {
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+
+  function resetAll() {
+    // screens
+    document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); });
+    // remove 'show' classes
+    document.querySelectorAll('.show').forEach(el => el.classList.remove('show'));
+    // remove pulse
+    document.getElementById('approve-glow-btn').classList.remove('pulse');
+    document.getElementById('s1-cursor').style.display = '';
+    document.getElementById('s1-text').textContent = '';
+    document.getElementById('progress-bar').style.width = '0%';
+    // restore timeline fns
+    setupTimeline();
+  }
+
+  function setupTimeline() {
+    timeline.length = 0;
+
+    at(0, () => {
+      screen('s1');
+      typeWriter('s1-text', 'Every morning. Same problem.', 1600);
+    });
+    at(1900, () => show('i1'));
+    at(2500, () => show('i2'));
+    at(3100, () => show('i3'));
+
+    at(4000, () => {
+      screen('s2');
+      document.getElementById('s1-cursor').style.display = 'none';
+    });
+    at(4200, () => show('c1'));
+    at(4550, () => show('c2'));
+    at(4900, () => show('c3'));
+
+    at(9000, () => {
+      screen('s3');
+      setTimeout(() => document.getElementById('email-panel').classList.add('show'), 80);
+    });
+
+    at(15000, () => {
+      screen('s4');
+      setTimeout(() => {
+        document.getElementById('approve-glow-btn').classList.add('pulse');
+        setTimeout(() => show('cr1'), 900);
+        setTimeout(() => show('cr2'), 1400);
+        setTimeout(() => show('cr3'), 1900);
+      }, 200);
+    });
+
+    at(19000, () => {
+      screen('s5');
+      setTimeout(() => { show('day-tag'); show('followup-card'); }, 100);
+    });
+
+    at(23000, () => {
+      screen('s6');
+      setTimeout(() => show('closer-logo'), 150);
+      setTimeout(() => show('closer-tagline'), 450);
+      setTimeout(() => show('closer-footer'), 750);
+      setTimeout(() => show('replay-btn'), 1200);
+    });
+  }
+
+  window.replay = function() {
+    if (rafId) cancelAnimationFrame(rafId);
+    startTime = null;
+    resetAll();
+    rafId = requestAnimationFrame(tick);
+  };
+
+  // init
+  setupTimeline();
+  rafId = requestAnimationFrame(tick);
+
+})();
+</script>
+</body>
+</html>
