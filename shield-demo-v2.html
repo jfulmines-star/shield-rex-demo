@@ -1375,28 +1375,46 @@ function replay() {
 }
 
 // ── Audio ──
-const demoAudio = new Audio('demo-audio-v2-final.mp3');
+const demoAudio = new Audio('demo-audio-v3-inspired.mp3');
 demoAudio.volume = 1.0;
 demoAudio.preload = 'auto';
 
-// ── Sound prompt overlay ──
-const soundPrompt = document.createElement('div');
-soundPrompt.id = 'sound-prompt';
-soundPrompt.innerHTML = '🔊 Click anywhere for sound';
-Object.assign(soundPrompt.style, {
-  position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
-  background: 'rgba(37,99,235,0.92)', color: '#fff', padding: '10px 22px',
-  borderRadius: '30px', fontSize: '13px', fontFamily: "'Inter', sans-serif",
-  fontWeight: '600', cursor: 'pointer', zIndex: '9999',
-  boxShadow: '0 4px 20px rgba(0,0,0,0.4)', letterSpacing: '0.3px',
-  transition: 'opacity 0.4s ease', opacity: '1'
+// ── Start Splash Overlay — guarantees audio+animation start together ──
+const splash = document.createElement('div');
+splash.id = 'start-splash';
+splash.innerHTML = `
+  <div style="text-align:center;">
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;color:#2563eb;text-transform:uppercase;margin-bottom:16px;">SHIELD TECHNOLOGIES</div>
+    <div style="font-size:32px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-0.5px;">REX</div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.5);margin-bottom:40px;">AI-Powered Sales Intelligence</div>
+    <button id="btn-start-demo" style="
+      background:#2563eb;color:#fff;border:none;padding:14px 40px;
+      border-radius:8px;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;
+      cursor:pointer;letter-spacing:0.3px;transition:background 0.2s;
+    ">▶ Watch Demo</button>
+    <div style="margin-top:16px;font-size:11px;color:rgba(255,255,255,0.3);">With audio — 90 seconds</div>
+  </div>
+`;
+Object.assign(splash.style, {
+  position: 'fixed', inset: '0', background: 'rgba(4,8,20,0.97)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  zIndex: '99999', fontFamily: "'Inter', sans-serif"
 });
-document.body.appendChild(soundPrompt);
+document.body.appendChild(splash);
 
-function hideSoundPrompt() {
-  soundPrompt.style.opacity = '0';
-  setTimeout(() => { soundPrompt.remove(); }, 500);
+document.getElementById('btn-start-demo').addEventListener('mouseover', e => { e.target.style.background = '#1d4ed8'; });
+document.getElementById('btn-start-demo').addEventListener('mouseout', e => { e.target.style.background = '#2563eb'; });
+
+function startDemo() {
+  splash.style.opacity = '0';
+  splash.style.transition = 'opacity 0.4s ease';
+  setTimeout(() => splash.remove(), 400);
+  demoAudio.currentTime = 0;
+  demoAudio.play().catch(() => {});
+  run();
 }
+
+document.getElementById('btn-start-demo').addEventListener('click', startDemo);
 
 // ── Wire replay button ──
 document.getElementById('btn-replay').addEventListener('click', () => {
@@ -1405,21 +1423,9 @@ document.getElementById('btn-replay').addEventListener('click', () => {
   replay();
 });
 
-// ── Start on load ──
+// ── Preload audio on load (don't start yet) ──
 window.addEventListener('load', () => {
-  demoAudio.play().then(() => {
-    hideSoundPrompt();
-  }).catch(() => {
-    // Autoplay blocked — wait for first user interaction
-    const startAudio = () => {
-      demoAudio.play().catch(() => {});
-      hideSoundPrompt();
-    };
-    soundPrompt.addEventListener('click', startAudio, { once: true });
-    document.addEventListener('click', startAudio, { once: true });
-    document.addEventListener('keydown', startAudio, { once: true });
-  });
-  run();
+  demoAudio.load();
 });
 </script>
 </body>
