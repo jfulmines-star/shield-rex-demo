@@ -734,20 +734,17 @@
 <script>
 (function() {
 
-  // ── timeline entries: [startMs, endMs, fn]
-  const timeline = [];
-  let startTime = null;
-  let rafId = null;
-  let totalDuration = 27000;
+  // ── Pure setTimeout engine — works regardless of tab visibility ──
+  let timers = [];
+  let progressTimer = null;
+  const totalDuration = 27000;
 
-  function at(ms, fn) { timeline.push([ms, fn]); }
-  function fired(idx) { timeline[idx][2] = null; } // mark fired
+  function show(id) { document.getElementById(id).classList.add('show'); }
+  function screen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
 
-  // ── helpers
-  function show(id)    { document.getElementById(id).classList.add('show'); }
-  function screen(id)  { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-
-  // ── typewriter
   function typeWriter(targetId, text, duration, cb) {
     const el = document.getElementById(targetId);
     el.textContent = '';
@@ -755,177 +752,97 @@
     const delay = duration / chars.length;
     let i = 0;
     function next() {
-      if (i < chars.length) {
-        el.textContent += chars[i++];
-        setTimeout(next, delay);
-      } else if (cb) cb();
+      if (i < chars.length) { el.textContent += chars[i++]; setTimeout(next, delay); }
+      else if (cb) cb();
     }
     next();
   }
 
-  // ── SCHEDULE ──
-
-  // Screen 1: 0–4s
-  at(0, () => {
-    screen('s1');
-    typeWriter('s1-text', 'Every morning. Same problem.', 1600);
-  });
-  at(1900, () => show('i1'));
-  at(2500, () => show('i2'));
-  at(3100, () => show('i3'));
-
-  // Screen 2: 4–9s
-  at(4000, () => {
-    screen('s2');
-    document.getElementById('s1-cursor').style.display = 'none';
-  });
-  at(4200, () => show('c1'));
-  at(4550, () => show('c2'));
-  at(4900, () => show('c3'));
-
-  // Screen 3: 9–15s
-  at(9000, () => {
-    screen('s3');
-    setTimeout(() => document.getElementById('email-panel').classList.add('show'), 80);
-  });
-
-  // Screen 4: 15–19s
-  at(15000, () => {
-    screen('s4');
-    setTimeout(() => {
-      document.getElementById('approve-glow-btn').classList.add('pulse');
-      setTimeout(() => show('cr1'), 900);
-      setTimeout(() => show('cr2'), 1400);
-      setTimeout(() => show('cr3'), 1900);
-    }, 200);
-  });
-
-  // Screen 5: 19–23s
-  at(19000, () => {
-    screen('s5');
-    setTimeout(() => { show('day-tag'); show('followup-card'); }, 100);
-  });
-
-  // Screen 6: 23–27s
-  at(23000, () => {
-    screen('s6');
-    setTimeout(() => show('closer-logo'), 150);
-    setTimeout(() => show('closer-tagline'), 450);
-    setTimeout(() => show('closer-footer'), 750);
-    setTimeout(() => show('replay-btn'), 1200);
-  });
-
-  // ── animation loop
-  function tick(ts) {
-    if (!startTime) startTime = ts;
-    const elapsed = ts - startTime;
-
-    // fire timeline events
-    for (let i = 0; i < timeline.length; i++) {
-      if (timeline[i][1] && elapsed >= timeline[i][0]) {
-        timeline[i][1]();
-        timeline[i][1] = null;
-      }
+  function startProgress() {
+    const startWall = Date.now();
+    function tick() {
+      const elapsed = Date.now() - startWall;
+      const pct = Math.min(100, (elapsed / totalDuration) * 100);
+      document.getElementById('progress-bar').style.width = pct + '%';
+      if (elapsed < totalDuration + 500) progressTimer = setTimeout(tick, 50);
     }
-
-    // progress bar
-    const pct = Math.min(100, (elapsed / totalDuration) * 100);
-    document.getElementById('progress-bar').style.width = pct + '%';
-
-    if (elapsed < totalDuration + 2000) {
-      rafId = requestAnimationFrame(tick);
-    }
+    tick();
   }
 
-  function resetAll() {
-    // screens
-    document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); });
-    // remove 'show' classes
+  function scheduleAll() {
+    const events = [
+      [0,     () => { screen('s1'); typeWriter('s1-text', 'Every morning. Same problem.', 1600); }],
+      [1900,  () => show('i1')],
+      [2500,  () => show('i2')],
+      [3100,  () => show('i3')],
+      [4000,  () => { screen('s2'); document.getElementById('s1-cursor').style.display = 'none'; }],
+      [4200,  () => show('c1')],
+      [4550,  () => show('c2')],
+      [4900,  () => show('c3')],
+      [9000,  () => { screen('s3'); setTimeout(() => document.getElementById('email-panel').classList.add('show'), 80); }],
+      [15000, () => {
+        screen('s4');
+        setTimeout(() => {
+          document.getElementById('approve-glow-btn').classList.add('pulse');
+          setTimeout(() => show('cr1'), 900);
+          setTimeout(() => show('cr2'), 1400);
+          setTimeout(() => show('cr3'), 1900);
+        }, 200);
+      }],
+      [19000, () => { screen('s5'); setTimeout(() => { show('day-tag'); show('followup-card'); }, 100); }],
+      [23000, () => {
+        screen('s6');
+        setTimeout(() => show('closer-logo'), 150);
+        setTimeout(() => show('closer-tagline'), 450);
+        setTimeout(() => show('closer-footer'), 750);
+        setTimeout(() => show('replay-btn'), 1200);
+      }],
+    ];
+    events.forEach(([ms, fn]) => timers.push(setTimeout(fn, ms)));
+    startProgress();
+  }
+
+  function clearAll() {
+    timers.forEach(t => clearTimeout(t));
+    timers = [];
+    if (progressTimer) clearTimeout(progressTimer);
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.show').forEach(el => el.classList.remove('show'));
-    // remove pulse
     document.getElementById('approve-glow-btn').classList.remove('pulse');
     document.getElementById('s1-cursor').style.display = '';
     document.getElementById('s1-text').textContent = '';
     document.getElementById('progress-bar').style.width = '0%';
-    // restore timeline fns
-    setupTimeline();
-  }
-
-  function setupTimeline() {
-    timeline.length = 0;
-
-    at(0, () => {
-      screen('s1');
-      typeWriter('s1-text', 'Every morning. Same problem.', 1600);
-    });
-    at(1900, () => show('i1'));
-    at(2500, () => show('i2'));
-    at(3100, () => show('i3'));
-
-    at(4000, () => {
-      screen('s2');
-      document.getElementById('s1-cursor').style.display = 'none';
-    });
-    at(4200, () => show('c1'));
-    at(4550, () => show('c2'));
-    at(4900, () => show('c3'));
-
-    at(9000, () => {
-      screen('s3');
-      setTimeout(() => document.getElementById('email-panel').classList.add('show'), 80);
-    });
-
-    at(15000, () => {
-      screen('s4');
-      setTimeout(() => {
-        document.getElementById('approve-glow-btn').classList.add('pulse');
-        setTimeout(() => show('cr1'), 900);
-        setTimeout(() => show('cr2'), 1400);
-        setTimeout(() => show('cr3'), 1900);
-      }, 200);
-    });
-
-    at(19000, () => {
-      screen('s5');
-      setTimeout(() => { show('day-tag'); show('followup-card'); }, 100);
-    });
-
-    at(23000, () => {
-      screen('s6');
-      setTimeout(() => show('closer-logo'), 150);
-      setTimeout(() => show('closer-tagline'), 450);
-      setTimeout(() => show('closer-footer'), 750);
-      setTimeout(() => show('replay-btn'), 1200);
-    });
   }
 
   window.replay = function() {
-    if (rafId) cancelAnimationFrame(rafId);
-    startTime = null;
-    resetAll();
-    rafId = requestAnimationFrame(tick);
+    clearAll();
     const audioEl = document.getElementById('demo-audio');
     if (audioEl) { audioEl.currentTime = 0; audioEl.play().catch(() => {}); }
+    scheduleAll();
   };
 
-  // init
-  setupTimeline();
-  rafId = requestAnimationFrame(tick);
-  
-  // start audio with animation
-  const audioEl = document.getElementById('demo-audio');
-  if (audioEl) {
-    audioEl.currentTime = 0;
-    audioEl.volume = 1.0;
-    audioEl.play().catch(() => {
-      // Autoplay blocked — add click-to-start overlay
-      const overlay = document.createElement('div');
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;cursor:pointer;';
-      overlay.innerHTML = \'<div style="text-align:center;color:#fff"><div style="font-size:48px;margin-bottom:16px">▶</div><div style="font-size:16px;font-weight:500;letter-spacing:0.1em">CLICK TO START</div></div>\';
-      overlay.onclick = function() { audioEl.play(); document.body.removeChild(overlay); };
-      document.body.appendChild(overlay);
-    });
+  function start() {
+    const audioEl = document.getElementById('demo-audio');
+    if (audioEl) {
+      audioEl.currentTime = 0;
+      audioEl.volume = 1.0;
+      audioEl.play().catch(() => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;z-index:9999;cursor:pointer;';
+        overlay.innerHTML = '<div style="text-align:center;color:#fff"><div style="font-size:52px;margin-bottom:16px;line-height:1">&#9654;</div><div style="font-size:15px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase">Click to Start</div></div>';
+        overlay.onclick = function() {
+          document.body.removeChild(overlay);
+          audioEl.play().catch(() => {});
+          clearAll();
+          scheduleAll();
+        };
+        document.body.appendChild(overlay);
+      });
+    }
+    scheduleAll();
   }
+
+  start();
 
 })();
 </script>
