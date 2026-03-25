@@ -822,9 +822,9 @@
 
     // fire timeline events
     for (let i = 0; i < timeline.length; i++) {
-      if (timeline[i][2] && elapsed >= timeline[i][0]) {
-        timeline[i][2]();
-        timeline[i][2] = null;
+      if (timeline[i][1] && elapsed >= timeline[i][0]) {
+        timeline[i][1]();
+        timeline[i][1] = null;
       }
     }
 
