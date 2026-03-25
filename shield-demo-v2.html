@@ -1383,42 +1383,139 @@ const demoAudio = new Audio('demo-audio-v3-inspired.mp3');
 demoAudio.volume = 1.0;
 demoAudio.preload = 'auto';
 
-// ── Start Splash Overlay — guarantees audio+animation start together ──
-const splash = document.createElement('div');
-splash.id = 'start-splash';
-splash.innerHTML = `
-  <div style="text-align:center;">
-    <div style="font-size:13px;font-weight:700;letter-spacing:3px;color:#2563eb;text-transform:uppercase;margin-bottom:16px;">SHIELD TECHNOLOGIES</div>
-    <div style="font-size:32px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-0.5px;">REX</div>
-    <div style="font-size:14px;color:rgba(255,255,255,0.5);margin-bottom:40px;">AI-Powered Sales Intelligence</div>
-    <button id="btn-start-demo" style="
-      background:#2563eb;color:#fff;border:none;padding:14px 40px;
-      border-radius:8px;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;
-      cursor:pointer;letter-spacing:0.3px;transition:background 0.2s;
-    ">▶ Watch Demo</button>
-    <div style="margin-top:16px;font-size:11px;color:rgba(255,255,255,0.3);">With audio — 90 seconds</div>
+// ── PIN Gate — shown first, replaced by start splash on success ──
+const DEMO_PIN = '7291';
+
+const pinGate = document.createElement('div');
+pinGate.id = 'pin-gate';
+pinGate.innerHTML = `
+  <div style="text-align:center;max-width:320px;width:90%;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:3px;color:#2563eb;text-transform:uppercase;margin-bottom:24px;">SHIELD TECHNOLOGIES</div>
+    <div style="font-size:28px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-0.5px;">REX</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:36px;">Enter your access code to continue</div>
+    <div id="pin-dots" style="display:flex;justify-content:center;gap:14px;margin-bottom:32px;">
+      <div class="pin-dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.2);transition:all 0.15s;"></div>
+      <div class="pin-dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.2);transition:all 0.15s;"></div>
+      <div class="pin-dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.2);transition:all 0.15s;"></div>
+      <div class="pin-dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.2);transition:all 0.15s;"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto;">
+      ${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k => `
+        <button class="pin-key" data-key="${k}" style="
+          background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);
+          color:#fff;font-size:20px;font-weight:600;font-family:'Inter',sans-serif;
+          padding:16px;border-radius:10px;cursor:pointer;transition:background 0.15s;
+          ${k===''?'visibility:hidden;':''}
+        ">${k}</button>
+      `).join('')}
+    </div>
+    <div id="pin-error" style="margin-top:20px;font-size:12px;color:#ef4444;opacity:0;transition:opacity 0.3s;">Incorrect code. Please try again.</div>
+    <div style="margin-top:28px;font-size:11px;color:rgba(255,255,255,0.2);">Confidential — for authorized recipients only</div>
   </div>
 `;
-Object.assign(splash.style, {
-  position: 'fixed', inset: '0', background: 'rgba(4,8,20,0.97)',
+Object.assign(pinGate.style, {
+  position: 'fixed', inset: '0', background: 'rgba(4,8,20,0.98)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  zIndex: '99999', fontFamily: "'Inter', sans-serif"
+  zIndex: '100000', fontFamily: "'Inter', sans-serif"
 });
-document.body.appendChild(splash);
+document.body.appendChild(pinGate);
 
-document.getElementById('btn-start-demo').addEventListener('mouseover', e => { e.target.style.background = '#1d4ed8'; });
-document.getElementById('btn-start-demo').addEventListener('mouseout', e => { e.target.style.background = '#2563eb'; });
+let pinEntry = '';
+const dots = pinGate.querySelectorAll('.pin-dot');
+const pinError = document.getElementById('pin-error');
 
-function startDemo() {
-  splash.style.opacity = '0';
-  splash.style.transition = 'opacity 0.4s ease';
-  setTimeout(() => splash.remove(), 400);
-  demoAudio.currentTime = 0;
-  demoAudio.play().catch(() => {});
-  run();
+function updateDots() {
+  dots.forEach((d, i) => {
+    if (i < pinEntry.length) {
+      d.style.background = '#2563eb';
+      d.style.borderColor = '#2563eb';
+    } else {
+      d.style.background = 'rgba(255,255,255,0.15)';
+      d.style.borderColor = 'rgba(255,255,255,0.2)';
+    }
+  });
 }
 
-document.getElementById('btn-start-demo').addEventListener('click', startDemo);
+function checkPin() {
+  if (pinEntry === DEMO_PIN) {
+    pinGate.style.opacity = '0';
+    pinGate.style.transition = 'opacity 0.4s ease';
+    setTimeout(() => {
+      pinGate.remove();
+      showStartSplash();
+    }, 400);
+  } else {
+    pinError.style.opacity = '1';
+    pinGate.querySelectorAll('.pin-dot').forEach(d => {
+      d.style.background = '#ef4444'; d.style.borderColor = '#ef4444';
+    });
+    setTimeout(() => {
+      pinEntry = '';
+      updateDots();
+      pinError.style.opacity = '0';
+    }, 900);
+  }
+}
+
+pinGate.querySelectorAll('.pin-key').forEach(btn => {
+  btn.addEventListener('mouseover', () => { if(btn.dataset.key !== '') btn.style.background = 'rgba(255,255,255,0.15)'; });
+  btn.addEventListener('mouseout', () => { btn.style.background = 'rgba(255,255,255,0.07)'; });
+  btn.addEventListener('click', () => {
+    const k = btn.dataset.key;
+    if (k === '⌫') { pinEntry = pinEntry.slice(0,-1); updateDots(); }
+    else if (k !== '' && pinEntry.length < 4) {
+      pinEntry += k;
+      updateDots();
+      if (pinEntry.length === 4) setTimeout(checkPin, 180);
+    }
+  });
+});
+
+// Keyboard support
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('pin-gate')) return;
+  if (e.key >= '0' && e.key <= '9' && pinEntry.length < 4) {
+    pinEntry += e.key; updateDots();
+    if (pinEntry.length === 4) setTimeout(checkPin, 180);
+  } else if (e.key === 'Backspace') { pinEntry = pinEntry.slice(0,-1); updateDots(); }
+});
+
+// ── Start Splash — shown after PIN success ──
+function showStartSplash() {
+  const splash = document.createElement('div');
+  splash.id = 'start-splash';
+  splash.innerHTML = `
+    <div style="text-align:center;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:3px;color:#2563eb;text-transform:uppercase;margin-bottom:16px;">SHIELD TECHNOLOGIES</div>
+      <div style="font-size:32px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-0.5px;">REX</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.5);margin-bottom:40px;">AI-Powered Sales Intelligence</div>
+      <button id="btn-start-demo" style="
+        background:#2563eb;color:#fff;border:none;padding:14px 40px;
+        border-radius:8px;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;
+        cursor:pointer;letter-spacing:0.3px;transition:background 0.2s;
+      ">▶ Watch Demo</button>
+      <div style="margin-top:16px;font-size:11px;color:rgba(255,255,255,0.3);">With audio — 56 seconds</div>
+    </div>
+  `;
+  Object.assign(splash.style, {
+    position: 'fixed', inset: '0', background: 'rgba(4,8,20,0.97)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    zIndex: '99999', fontFamily: "'Inter', sans-serif"
+  });
+  document.body.appendChild(splash);
+
+  const btn = document.getElementById('btn-start-demo');
+  btn.addEventListener('mouseover', () => { btn.style.background = '#1d4ed8'; });
+  btn.addEventListener('mouseout',  () => { btn.style.background = '#2563eb'; });
+  btn.addEventListener('click', () => {
+    splash.style.opacity = '0';
+    splash.style.transition = 'opacity 0.4s ease';
+    setTimeout(() => splash.remove(), 400);
+    demoAudio.currentTime = 0;
+    demoAudio.play().catch(() => {});
+    run();
+  });
+}
 
 // ── Wire replay button ──
 document.getElementById('btn-replay').addEventListener('click', () => {
